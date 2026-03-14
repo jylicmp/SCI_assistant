@@ -208,6 +208,44 @@ tail -f file_watcher.log
 
 ## 版本历史
 
+### v1.2 (2026-03-14) - arXiv 预印本检测 + Subagent 调用修复
+
+**新增功能：**
+- 🆕 **arXiv 预印本自动检测**：当论文为预印本时，Journal/Year 字段自动填入 "arXiv / Year"
+  - 检测优先级：元数据期刊字段 → 文件名关键词 → PDF 内容识别
+  - 已发表论文仍使用实际期刊名（如 "Physical Review B / 2023"）
+  - 仅在无法确定时使用 "Unknown / Year" 作为后备
+
+**Bug 修复：**
+- 🐛 **修复 Subagent 调用失败问题**：SKILL.md 中 `claude -p "$(< .claude/agents/cmp_summarizer.md)..."` 语法错误
+  - 根本原因：`$()` 命令替换在双引号内破坏换行符，长字符串导致 bash 解析失败
+  - 解决方案：改用 `--agent cmp-summarizer` 参数加载 agent 文件
+  - 修改文件：`.claude/skills/cmp-summary-workflow/SKILL.md` Step 4
+
+**技术变更：**
+- 更新 `cmp-summarizer.md` METADATA RULES：添加 arXiv 预印本优先规则
+- 更新 `SKILL.md` Step 1：添加 arXiv 检测逻辑 (`is_arxiv` 标志)
+- 更新 `SKILL.md` Step 4：修正 subagent 调用命令格式
+
+**检测规则：**
+```python
+# arXiv 预print 检测逻辑
+is_arxiv = False
+if journal and 'arxiv' in journal.lower():
+    is_arxiv = True
+    journal = 'arXiv'
+elif pdf_filename.lower().find('arxiv') != -1:
+    is_arxiv = True
+    journal = 'arXiv'
+```
+
+**输出示例：**
+| 论文类型 | Journal/Year 输出 |
+|----------|------------------|
+| 已发表 | `Physical Review B / 2023` |
+| arXiv 预印本 | `arXiv / 2023` |
+| 未知来源 | `Unknown / 2023` (后备) |
+
 ### v1.1 (2026-03-14) - PDF 自动分类功能
 
 **新增功能：**

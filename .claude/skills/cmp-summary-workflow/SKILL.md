@@ -9,7 +9,7 @@ allowed-tools: [Bash, Read, Write]
 ## Overview
 Do NOT summarize Condensed Matter Physics (CMP) papers directly in the main conversation context. If the user requests to summarize multiple papers or an entire directory, you MUST process them **sequentially (one by one)**. 
 
-For **EACH** paper, perform a strict preprocessing workflow (Extract Metadata -> Compute SHA256 Hash -> Rename & Archive PDF) and then delegate the summarization to the native `cmp_summarizer` Subagent.
+For **EACH** paper, perform a strict preprocessing workflow (Extract Metadata -> Compute SHA256 Hash -> Rename & Archive PDF) and then delegate the summarization to the native `cmp-summarizer` Subagent.
 
 ## Execution Workflow (STRICT ORDER)
 
@@ -17,7 +17,30 @@ When the user asks to summarize one or more papers (e.g., "Summarize all PDFs in
 
 ### Step 0: Identify Target Files
 Identify the exact paths of all PDF files the user wants to process. If a directory is specified, use the `Bash` tool to list all `.pdf` files inside it.
-Create a queue of these files. **Process the queue ONE BY ONE by executing Steps 0.1 to 4 for each file before moving to the next.**
+
+### Step 0.0: Check Processed Papers Lookup Table (CRITICAL - Run FIRST)
+**Before processing any PDF, first check the `processed_papers.csv` lookup table** to determine if a paper has already been processed.
+
+The lookup table is located at: `.claude/skills/cmp-summary-workflow/processed_papers.csv`
+
+**Check Process:**
+1. Read `processed_papers.csv` to get all already-processed PDF filenames and their Hash IDs
+2. For each target PDF, check if its filename exists in the lookup table
+3. If found, **skip all processing steps** for this file and log it as "Already processed"
+4. Only create a queue of files that are NOT in the lookup table
+
+**Example lookup table format:**
+```
+PDF 文件名，HashID
+Zhu 等 - 2025 - Magnetic geometry.pdf,99601758296340919977837740649730029451531977553314166620560899200507929180592
+Zyuzin - 2025 - Antitoroidal magnets.pdf,22684547456475760315941586172644602821616411693201862336120404181001184982630
+```
+
+**Action:**
+- If a PDF is found in the lookup table, skip it and move to the next file
+- Only process PDFs that are NOT in the lookup table (these are unsummarized papers)
+
+**Create a queue of unsummarized files. Process the queue ONE BY ONE by executing Steps 0.1 to 4 for each file before moving to the next.**
 
 ### Step 0.1: PDF Classification (CRITICAL - Run BEFORE summarization)
 Before processing each PDF, **first classify it** to determine if it should be summarized or moved to a special directory.
@@ -76,14 +99,61 @@ Skip all remaining steps for this file. Log: "Classified as Book -> moved to inp
 If none of the above conditions match, classify as **Regular Paper** and proceed with Steps 1-4 for summarization.
 
 ### Step 1: Query Metadata (For current file)
-Read the `metadata.csv` file. Find the row corresponding to the requested paper (match by title, file name, or author).
+Read the `metadata.csv` file. **Use Column 38 "File Attachments" to match the PDF filename** (this provides 100% match rate).
+
+**Metadata Matching Method (Column 38 - File Attachments):**
+```python
+import csv
+import os
+
+pdf_filename = "Zhu 等 - 2024 - Example paper.pdf"
+metadata_path = "metadata.csv"
+
+with open(metadata_path, 'r', encoding='utf-8') as f:
+    reader = csv.reader(f)
+    header = next(reader)  # Skip header
+
+    for row in reader:
+        if len(row) > 37:
+            file_attachments = row[37]  # Column 38 (0-indexed: 37)
+            # Check if PDF filename is in the File Attachments column
+            if pdf_filename in file_attachments:
+                # Found matching metadata!
+                author = row[3] if len(row) > 3 else ''       # Column 4: Author
+                title = row[4] if len(row) > 4 else ''        # Column 5: Title
+                journal = row[5] if len(row) > 5 else ''      # Column 6: Publication Title
+                year = row[2] if len(row) > 2 else ''         # Column 3: Publication Year
+                item_type = row[1] if len(row) > 1 else ''    # Column 2: Item Type
+                publisher = row[26] if len(row) > 26 else ''  # Column 27: Publisher
+                break
+```
+
+**Why Column 38?** The "File Attachments" column contains full paths like:
+`/Users/lijiayu/Zotero/storage/ABC12345/Zhu 等 - 2024 - Paper Title.pdf`
+
+This allows exact filename matching, achieving **100% match rate** (tested on 16 PDFs).
+
 Extract the following exact fields:
-- `Author` (Extract ONLY the first author's name, format as FirstLast, e.g., "Zhu, Haiyuan" becomes "HaiyuanZhu")
+- `Author` (Extract ONLY the first author's name, format as "FirstLast", e.g., "Zhu, Haiyuan" becomes "HaiyuanZhu")
 - `Publication Title` or `Journal Abbreviation` (e.g., "NatureCommunications")
 - `Publication Year` (e.g., "2025")
 - `Title` (e.g., "Magnetic geometry induced quantum geometry and nonlinear transports")
 - `Publisher` (if available, for book classification)
 - `Item Type` (if available, for review classification)
+
+**arXiv Preprint Detection:**
+After extracting metadata, check if the paper is an arXiv preprint:
+```python
+# Detect arXiv preprint
+is_arxiv = False
+if journal and 'arxiv' in journal.lower():
+    is_arxiv = True
+    journal = 'arXiv'
+elif pdf_filename.lower().find('arxiv') != -1:
+    is_arxiv = True
+    journal = 'arXiv'
+```
+If `is_arxiv` is True, use "arXiv" as the journal name for subsequent steps.
 
 ### Step 2: Construct String & Compute Hash (For current file)
 Construct the string `[auth1][journal][year][title]`. **Remove ALL spaces and punctuation** (keep only alphanumeric characters).
@@ -111,20 +181,42 @@ cp "path/to/current_paper.pdf" "output_pdfs/<HashID>.pdf"
 *(Note: Adjust the source path if the file was moved during classification)*
 
 ### Step 4: Execute Native Subagent (For current file)
-Use the `Bash` tool to natively invoke the `cmp_summarizer` subagent via the Claude CLI. Pass the archived PDF path and the Hash ID, and pipe the output directly to the markdown file:
-```bash
-claude -p "$(< .claude/agents/cmp_summarizer.md)
+Pass the extracted metadata (Journal, Year, Authors, Title) to the subagent and instruct it to use **ENGLISH keywords only**.
 
-The unique Hash ID for this paper is: <HashID>. Please read and summarize this paper: output_pdfs/<HashID>.pdf" > "data_md/<HashID>.md"
+Use the `Bash` tool to natively invoke the `cmp-summarizer` subagent via the Claude CLI with the `--agent` flag:
+```bash
+claude --agent cmp-summarizer -p "The unique Hash ID for this paper is: <HashID>.
+
+Metadata for this paper:
+- Authors: <extracted_authors>
+- Journal/Year: <journal> / <year>
+- Title: <title>
+
+IMPORTANT REQUIREMENTS:
+1. **Journal/Year field MUST be filled** in the format 'Journal Name / Year' (e.g., 'Physical Review B / 2023').
+   - If the paper is published, use the actual journal name
+   - If the paper is a preprint (arXiv identifier present or arXiv branding in PDF), use 'arXiv / <year>'
+   - Only use 'Unknown / <year>' as a last resort when journal cannot be determined
+2. **Keywords MUST be in ENGLISH only** (no Chinese characters). Use standard physics terms like 'Berry Curvature', 'Quantum Anomalous Hall Effect', etc.
+
+Please read and summarize this paper: output_pdfs/<HashID>.pdf" > "data_md/<HashID>.md"
 ```
 *(Note: Wait for this Bash command to finish completely before starting Step 1 for the next paper in the queue.)*
 
-### Step 5: Batch Completion & Final Output
+### Step 5: Batch Completion & Final Output and Update Lookup Table
 Once ALL papers in the queue have been successfully processed, verify the results.
 
 **For Regular Papers:** Verify that the corresponding `.md` files exist in the `data_md/` directory.
 
 **For Classified Files:** Verify that files were moved to the correct directories (`input_review/`, `input_book/`, `input_supp/`).
+
+**Update the processed_papers.csv lookup table:**
+For each successfully processed paper, append a new row to `processed_papers.csv` with the PDF filename and its Hash ID:
+```python
+# Append to processed_papers.csv
+with open('.claude/skills/cmp-summary-workflow/processed_papers.csv', 'a') as f:
+    f.write(f"{pdf_filename},{hash_id}\n")
+```
 
 Present a comprehensive summary to the user detailing the batch results. For example:
 "Successfully processed 5 files:
@@ -136,6 +228,9 @@ Present a comprehensive summary to the user detailing the batch results. For exa
 **Classified Files (not summarized):**
 3. `ReviewArticle2024.pdf` -> Classified as Review -> moved to `input_review/`
 4. `BookChapter2022.pdf` -> Classified as Book -> moved to `input_book/`
-5. `Supplementary_SI.pdf` -> Classified as Supplement -> moved to `input_supp/`"
+5. `Supplementary_SI.pdf` -> Classified as Supplement -> moved to `input_supp/`
+
+**Already processed (skipped):**
+6. `PreviousPaper2024.pdf` -> Found in processed_papers.csv, skipped"
 
 **CRITICAL RULE: DO NOT print the actual markdown summaries in the main chat window. Only report the file paths, Hash IDs, and classification results.**
