@@ -189,7 +189,7 @@ node martian_convert.js --file input.md
 
 ## 许可证
 
-ISC
+MIT - 详见 [LICENSE](LICENSE) 文件
 
 ## 相关链接
 
