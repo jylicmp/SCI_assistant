@@ -3,6 +3,7 @@
 文献总结与同步工具，专为凝聚态物理（Condensed Matter Physics）研究领域设计。自动从 PDF 论文生成结构化 Markdown 摘要，并同步到 Notion 知识库。
 
 **Author**: Jiayu Li
+
 **Affiliation**: The University of Hong Kong
 
 ## 功能特性

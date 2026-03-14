@@ -69,6 +69,9 @@ dify_upload.log
 # Data directories (may contain sensitive content)
 data_md/
 input_pdfs/
+input_review/
+input_book/
+input_supp/
 output_pdfs/
 
 # Metadata files (may contain personal information)
