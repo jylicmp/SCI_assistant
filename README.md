@@ -208,10 +208,10 @@ MIT - 详见 [LICENSE](LICENSE) 文件
 
 **新增功能：**
 - 🆕 **PDF 自动分类**：在总结前自动识别并分类 4 种类型的 PDF
-  - 📎 **Supplement (补充材料)**：通过文件名关键词检测 (MOESM, SI, supplementary 等) → `input_supp/`
+  - 📎 **补充材料 (Supplement)**：通过文件名关键词检测 (MOESM, SI, supplementary 等) → `input_supp/`
   - 📚 **书籍 (Book)**：大文件 (>10MB) + 有出版社但无期刊信息 → `input_book/`
   - 📖 **综述 (Review)**：综述期刊 或 大文件 (>5MB, >20 页) → `input_review/`
-  - 📄 **普通论文**：不符合以上条件，正常总结流程 → `output_pdfs/` + `data_md/`
+  - 📄 **普通论文（Article）**：不符合以上条件，正常总结流程 → `output_pdfs/` + `data_md/`
 
 **技术变更：**
 - 新增 `cmp-summary-workflow` Skill 的 Step 0.1 分类逻辑
