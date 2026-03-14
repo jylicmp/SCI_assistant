@@ -79,11 +79,13 @@ DOC_SUFFIX=pdf
 
 ```bash
 # 处理单篇或多篇论文
-/invoke-cmp-summary-workflow
+/cmp-summary-workflow
 
 # 同行评审
-/invoke-cmp-peer-review
+/cmp-peer-review
 ```
+
+**说明**：`cmp-summary-workflow` 会自动调用 `cmp_summarizer` 子代理（位于 `.claude/agents/cmp-summarizer.md`）来生成论文摘要。
 
 ## 核心工作流
 

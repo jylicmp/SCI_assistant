@@ -75,6 +75,9 @@ output_pdfs/
 metadata.csv
 metadata.txt
 
+# Other markdown files
+gemini.md
+
 # Claude specific
 .claude/projects/
 .claude/plans/
