@@ -205,3 +205,36 @@ tail -f file_watcher.log
 ### 自定义 Block 转换
 
 修改 `notion_sync.py` 中的 `md_to_notion_blocks()` 方法，添加新的 markdown 语法支持。
+
+## 版本历史
+
+### v1.1 (2026-03-14) - PDF 自动分类功能
+
+**新增功能：**
+- 🆕 **PDF 自动分类**：在总结前自动识别并分类 4 种类型的 PDF
+  - 📎 **Supplement (补充材料)**：通过文件名关键词检测 (MOESM, SI, supplementary 等) → `input_supp/`
+  - 📚 **书籍 (Book)**：大文件 (>10MB) + 有出版社但无期刊信息 → `input_book/`
+  - 📖 **综述 (Review)**：综述期刊 或 大文件 (>5MB, >20 页) → `input_review/`
+  - 📄 **普通论文**：不符合以上条件，正常总结流程 → `output_pdfs/` + `data_md/`
+
+**技术变更：**
+- 新增 `cmp-summary-workflow` Skill 的 Step 0.1 分类逻辑
+- 添加 PyPDF2 依赖用于页数检测
+- 新增目录：`input_review/`, `input_book/`, `input_supp/`
+
+**测试验证：**
+| 测试文件 | 分类结果 | 目标目录 |
+|----------|----------|----------|
+| 41467_2017_133_MOESM1_ESM.pdf | Supplement | input_supp/ |
+| Ashcroft & Mermin - Solid state physics.pdf | Book (97MB, 848 页) | input_book/ |
+| Žutić et al. - Spintronics Review | Review (Rev. Mod. Phys.) | input_review/ |
+| Zyuzin - Antitoroidal magnets | Regular Paper | 已总结并同步到 Notion |
+
+### v1.0 (2026-03-13) - 初始版本
+
+**核心功能：**
+- Notion 自动同步脚本 (`notion_sync.py`)
+- 文件监控器 (`file_watcher.py`)
+- 支持全量同步、单文件同步、预览模式
+- 基于 Hash ID 的增量更新机制
+- Markdown 到 Notion Blocks 转换（支持 LaTeX 公式）

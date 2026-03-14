@@ -201,3 +201,29 @@ MIT - 详见 [LICENSE](LICENSE) 文件
 - [Martian](https://github.com/tryfabric/martian) - Markdown to Notion 转换工具
 - [Notion API 文档](https://developers.notion.com/)
 - [Claude Code 文档](https://claude.ai/code)
+
+## 版本历史
+
+### v1.1 (2026-03-14) - PDF 自动分类功能
+
+**新增功能：**
+- 🆕 **PDF 自动分类**：在总结前自动识别并分类 4 种类型的 PDF
+  - 📎 **Supplement (补充材料)**：通过文件名关键词检测 (MOESM, SI, supplementary 等) → `input_supp/`
+  - 📚 **书籍 (Book)**：大文件 (>10MB) + 有出版社但无期刊信息 → `input_book/`
+  - 📖 **综述 (Review)**：综述期刊 或 大文件 (>5MB, >20 页) → `input_review/`
+  - 📄 **普通论文**：不符合以上条件，正常总结流程 → `output_pdfs/` + `data_md/`
+
+**技术变更：**
+- 新增 `cmp-summary-workflow` Skill 的 Step 0.1 分类逻辑
+- 添加 PyPDF2 依赖用于页数检测
+- 新增目录：`input_review/`, `input_book/`, `input_supp/`
+
+### v1.0 (2026-03-13) - 初始版本
+
+**核心功能：**
+- AI 驱动的 CMP 论文自动摘要
+- 结构化 Markdown 输出（含 LaTeX 公式支持）
+- Notion 数据库同步
+- 文件监控器（自动触发同步）
+- Dify 知识库集成
+- 同行评审功能（cmp-peer-review）
