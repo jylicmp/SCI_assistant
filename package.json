@@ -1,0 +1,23 @@
+{
+  "name": "sci_assistant",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/jylicmp/SCI_assistant.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/jylicmp/SCI_assistant/issues"
+  },
+  "homepage": "https://github.com/jylicmp/SCI_assistant#readme",
+  "description": "",
+  "dependencies": {
+    "@tryfabric/martian": "^1.2.4"
+  }
+}
