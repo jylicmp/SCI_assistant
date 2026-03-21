@@ -135,12 +135,15 @@ NOTION_DATABASE_ID=xxx
 
 ## Version History
 
-### v1.3.1 (Current)
+### v1.3.2 (Current)
+- **Feature**: Notion sync subagent (`notion-sync`)
+  - Automated sync status checking between local and Notion
+  - Upload new summaries to Notion database
+  - Verify upload results and report discrepancies
 - **Fix**: Enhanced subagent template with explicit format rules
   - Added "CRITICAL OUTPUT RULES" section
   - Explicitly forbid intro text, separator lines, extra sections
   - Provide correct/incorrect ending examples
-- **Docs**: Added common validation failure cases and solutions in SKILL.md
 
 ### v1.3
 - **Feature**: Automatic summary format validation
