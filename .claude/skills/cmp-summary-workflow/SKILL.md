@@ -319,3 +319,36 @@ Present a comprehensive summary to the user detailing the batch results. For exa
 6. `PreviousPaper2024.pdf` -> Found in processed_papers.csv, skipped"
 
 **CRITICAL RULE: DO NOT print the actual markdown summaries in the main chat window. Only report the file paths, Hash IDs, and classification results.**
+
+---
+
+## Notion Sync Subagent (`notion-sync`)
+
+For syncing local summaries to Notion database, use the dedicated `notion-sync` subagent.
+
+### Workflow
+
+The `notion-sync` subagent will:
+1. Run `check_sync_status.py` to compare local files vs Notion
+2. Identify files that exist only locally (need to be uploaded)
+3. Upload each new file using `notion_sync.py --file <path>`
+4. Re-run check to verify synchronization
+5. Report the sync results
+
+### Usage
+
+```bash
+claude --agent notion-sync -p "Sync all local summaries to Notion"
+```
+
+Or for specific file:
+```bash
+claude --agent notion-sync -p "Check sync status and upload HashID: <hash_id>"
+```
+
+### Expected Output
+
+- Initial comparison (local vs Notion counts)
+- Upload progress for new files
+- Final verification confirming sync completion
+- Summary of synced files
