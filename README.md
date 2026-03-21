@@ -29,7 +29,8 @@ SCI_assistant/
 ├── output_pdfs/          # 归档 PDF (重命名为 HashID.pdf)
 ├── .claude/
 │   ├── agents/
-│   │   └── cmp-summarizer.md   # 子代理提示模板
+│   │   ├── cmp-summarizer.md   # 子代理提示模板
+│   │   └── notion-sync.md      # Notion 同步子代理
 │   └── skills/
 │       ├── cmp-summary-workflow/  # 主工作流技能
 │       └── cmp-peer-review/       # 同行评审技能

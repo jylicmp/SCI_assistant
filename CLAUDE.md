@@ -23,7 +23,8 @@ SCI_assistant/
 ├── output_pdfs/          # Archived PDFs (renamed to HashID.pdf)
 ├── .claude/
 │   ├── agents/
-│   │   └── cmp-summarizer.md   # Subagent prompt template
+│   │   ├── cmp-summarizer.md   # Subagent prompt template
+│   │   └── notion-sync.md      # Notion sync subagent
 │   └── skills/
 │       ├── cmp-summary-workflow/  # Main workflow skill
 │       │   ├── SKILL.md           # Skill definition & workflow
