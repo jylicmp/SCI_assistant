@@ -80,9 +80,9 @@ class NotionSync:
         with open(file_path, "r", encoding="utf-8") as f:
             content = f.read()
 
-        # Extract metadata section
+        # Extract metadata section (support both with and without English suffix)
         metadata_section = re.search(
-            r"## 📄 基本信息 \(Metadata\)\n(.*?)(?=\n## |\Z)",
+            r"## 📄 基本信息(?: \(Metadata\))?\n(.*?)(?=\n## |\Z)",
             content,
             re.DOTALL
         )

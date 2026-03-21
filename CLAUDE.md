@@ -135,7 +135,14 @@ NOTION_DATABASE_ID=xxx
 
 ## Version History
 
-### v1.3 (Current)
+### v1.3.1 (Current)
+- **Fix**: Enhanced subagent template with explicit format rules
+  - Added "CRITICAL OUTPUT RULES" section
+  - Explicitly forbid intro text, separator lines, extra sections
+  - Provide correct/incorrect ending examples
+- **Docs**: Added common validation failure cases and solutions in SKILL.md
+
+### v1.3
 - **Feature**: Automatic summary format validation
   - Check 8 required sections are present
   - Verify Chinese language compliance

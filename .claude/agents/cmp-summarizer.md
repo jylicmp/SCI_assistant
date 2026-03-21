@@ -24,7 +24,7 @@ Do NOT write explanations in English. Translate all concepts, mechanisms, and fi
 
 # [Paper Title] - Literature Summary
 
-## 📄 基本信息 (Metadata)
+## 📄 基本信息
 - **Authors**: [First Author, Corresponding Author, etc.]
 - **Journal/Year**: [Journal Name / Year]  # MUST include both Journal AND Year, e.g., "Physical Review B / 2023"
 - **File Hash ID**: [Insert the Hash ID provided in the user prompt]
@@ -38,39 +38,73 @@ Do NOT write explanations in English. Translate all concepts, mechanisms, and fi
    Never leave this field empty or missing.
 2. **Keywords**: MUST be in ENGLISH only (no Chinese characters). Use standard physics terminology (e.g., "Berry Curvature" not "贝里曲率", "Quantum Anomalous Hall Effect" not "量子反常霍尔效应").
 
-## 🎯 一句话摘要 (Core Takeaway)
+## 🎯 一句话摘要
 > [1-2 sentence high-level summary: Material + Method + Ultimate Physical Conclusion]
 
-## 1. 动机与背景 (Motivation & Background)
-- **研究空白 (Research Gap)**: [What specific physical problem or controversy does this address?]
-- **研究目的 (Objectives)**: [Primary goal of the study]
+## 1. 动机与背景
+- **研究空白**: [What specific physical problem or controversy does this address?]
+- **研究目的**: [Primary goal of the study]
 
-## 2. 核心创新点 (Key Innovations)
+## 2. 核心创新点
 - [Conceptual/Theoretical innovation]
 - [Experimental/Methodological breakthrough or Material discovery]
 
-## 3. 核心物理图像与模型 (Key Physical Picture / Model)
-- **物理机制 (Physical Mechanism)**: [Briefly explain the core physics, e.g., coupling mechanism, band topology]
-- **核心方程/哈密顿量 (Core Equations)**: [Provide the most important equation(s) in LaTeX]
-- **物理假设 (Assumptions)**: [e.g., mean-field approximation, zero-temperature limit]
+## 3. 核心物理图像与模型
+- **物理机制**: [Briefly explain the core physics, e.g., coupling mechanism, band topology]
+- **核心方程/哈密顿量**: [Provide the most important equation(s) in LaTeX]
+- **物理假设**: [e.g., mean-field approximation, zero-temperature limit]
 
-## 4. 方法与技术 (Methods & Techniques)
-- **实验细节 (Experimental Details)**: [Synthesis method, Measurement probes, Critical parameters (T, B)]
-- **理论/计算细节 (Theoretical Details)**: [Framework (DFT/DMFT), Software, Functionals, K-mesh, Hubbard U]
+## 4. 方法与技术
+- **实验细节**: [Synthesis method, Measurement probes, Critical parameters (T, B)]
+- **理论/计算细节**: [Framework (DFT/DMFT), Software, Functionals, K-mesh, Hubbard U]
 
-## 5. 关键结果与证据 (Key Results & Critical Evidence)
-- **决定性证据 (Smoking Gun Evidence)**: [What is the definitive proof of their claim? Which figure?]
-- **主要发现 (Major Findings)**: [List key findings with exact physical quantities]
+## 5. 关键结果与证据
+- **决定性证据**: [What is the definitive proof of their claim? Which figure?]
+- **主要发现**: [List key findings with exact physical quantities]
 
-## 6. 通用性与局限性 (Generality & Limitations)
-- **通用性 (Generality)**: [Can this be applied to other systems?]
-- **局限性 (Limitations)**: [What are the experimental/theoretical weaknesses?]
+## 6. 通用性与局限性
+- **通用性**: [Can this be applied to other systems?]
+- **局限性**: [What are the experimental/theoretical weaknesses?]
 
-## 7. 结论与探讨 (Conclusions & Discussion)
+## 7. 结论与探讨
 - [How does this resolve the original motivation and fit into existing literature?]
 
-## 8. 可拓展性与遗留问题 (Extensibility & Open Questions)
-- **未来方向 (Future Directions)**: [Immediate next experiments/calculations suggested]
-- **未解之谜 (Unresolved Issues)**: [Anomalies left unexplained or theoretical gaps]
+## 8. 可拓展性与遗留问题
+- **未来方向**: [Immediate next experiments/calculations suggested]
+  - [List 3-4 specific future research directions]
+- **未解之谜**: [Anomalies left unexplained or theoretical gaps]
+  - [List 3-4 open questions or unresolved issues]
 
-**IMPORTANT**: The summary MUST end after Section 8. Do NOT add a final "Summary" or "Conclusion" section after Section 8. Section 8 is the final section.
+---
+
+## CRITICAL OUTPUT RULES - MUST FOLLOW
+
+1. **Start immediately with title**: Your output MUST begin with `# [Paper Title] - Literature Summary` (NO introduction text like "我已完成阅读" or "以下是总结")
+
+2. **No separator lines**: Do NOT use `---` horizontal rules anywhere in the output
+
+3. **Exactly 8 sections**: Only sections 1-8 above, nothing more
+
+4. **End with Section 8**: The file MUST end after the "未解之谜" subsection of Section 8. No final summary paragraph.
+
+5. **Chinese language**: ALL descriptive text must be in Chinese (中文). Only LaTeX equations, physical quantities, material names, software names, and keywords should be in English.
+
+6. **Complete all sections**: Every section must have substantive content, not just headers.
+
+**CORRECT ENDING EXAMPLE:**
+```
+- **未解之谜**:
+  - First open question
+  - Second open question
+  - Third open question
+```
+
+**INCORRECT ENDING (DO NOT DO THIS):**
+```
+- **未解之谜**:
+  - First open question
+
+---
+
+**总结**: This paper presents...
+```

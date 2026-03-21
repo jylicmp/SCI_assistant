@@ -230,24 +230,49 @@ Please read and summarize this paper: output_pdfs/<HashID>.pdf" > "data_md/<Hash
 After the subagent completes, **verify the generated summary strictly follows the template format**. Read the generated file and check for compliance.
 
 **Validation Checklist:**
-1. **Metadata Section**: Must contain `## 📄 基本信息 (Metadata)` with Authors, Journal/Year, File Hash ID, Keywords
-2. **Keywords**: Must be in ENGLISH only (no Chinese characters)
-3. **Journal/Year**: Must be filled in format 'Journal Name / Year'
-4. **8 Required Sections** (must be in Chinese):
-   - `## 1. 动机与背景` (Motivation & Background)
-   - `## 2. 核心创新点` (Key Innovations)
-   - `## 3. 核心物理图像与模型` (Key Physical Picture / Model)
-   - `## 4. 方法与技术` (Methods & Techniques)
-   - `## 5. 关键结果与证据` (Key Results & Critical Evidence)
-   - `## 6. 通用性与局限性` (Generality & Limitations)
-   - `## 7. 结论与探讨` (Conclusions & Discussion)
-   - `## 8. 可拓展性与遗留问题` (Extensibility & Open Questions)
-5. **No Extra Sections**: Must NOT have any content after Section 8 (no final summary block)
-6. **Language**: All narrative text must be in Chinese (中文), only equations/keywords in English
+1. **Title**: Must be `# [Paper Title] - Literature Summary`
+2. **Metadata Section**: Must contain `## 📄 基本信息` with Authors, Journal/Year, File Hash ID, Keywords
+3. **Keywords**: Must be in ENGLISH only (no Chinese characters)
+4. **Journal/Year**: Must be filled in format 'Journal Name / Year'
+5. **8 Required Sections** (Chinese headers only, NO English in parentheses):
+   - `## 🎯 一句话摘要`
+   - `## 1. 动机与背景`
+   - `## 2. 核心创新点`
+   - `## 3. 核心物理图像与模型`
+   - `## 4. 方法与技术`
+   - `## 5. 关键结果与证据`
+   - `## 6. 通用性与局限性`
+   - `## 7. 结论与探讨`
+   - `## 8. 可拓展性与遗留问题`
+6. **No Extra Sections**: Must NOT have any content after Section 8 (no final summary block)
+7. **Language**: All narrative text must be in Chinese (中文), only equations/keywords in English
 
 **If Validation Fails:**
-- If the format is incorrect, regenerate the summary using the main agent with explicit instructions to follow the template exactly
-- If metadata is malformed, fix it before proceeding
+
+Common issues and solutions:
+
+1. **Extra Intro Text**: Subagent may add text like "我已完成阅读..." before the title
+   - **Fix**: Remove all content before `# [Paper Title]`
+
+2. **Extra Separator Lines**: Subagent may add `---` separators not in template
+   - **Fix**: Remove all `---` lines
+
+3. **Missing Section 8 Content**: Section 8 may be empty or incomplete
+   - **Fix**: Ensure Section 8 has both "未来方向" and "未解之谜" subsections
+
+4. **Extra Summary Block**: Subagent may add a final "Summary" or "总结" section after Section 8
+   - **Fix**: Remove everything after Section 8 (file must end with "未解之谜" content)
+
+5. **Wrong Language**: Content in English instead of Chinese
+   - **Fix**: Regenerate with explicit "中文" requirement
+
+6. **Malformed Equations**: LaTeX equations may be malformed
+   - **Fix**: Check equation syntax and fix manually if needed
+
+**Regeneration Procedure:**
+- If format is severely incorrect, regenerate using main agent with explicit template instructions
+- If minor issues, fix using Edit tool to correct specific lines
+- Always verify after fixing
 
 **If Validation Passes:** Proceed to Step 5.
 
