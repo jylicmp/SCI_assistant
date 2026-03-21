@@ -19,28 +19,41 @@ When the user asks to summarize one or more papers (e.g., "Summarize all PDFs in
 Identify the exact paths of all PDF files the user wants to process. If a directory is specified, use the `Bash` tool to list all `.pdf` files inside it.
 
 ### Step 0.0: Check Processed Papers Lookup Table (CRITICAL - Run FIRST)
-**Before processing any PDF, first check the `processed_papers.csv` lookup table** to determine if a paper has already been processed.
+**Before processing any PDF, first check the `processed_papers.csv` and `working_papers.csv` lookup tables** to determine if a paper has already been processed or is currently being processed.
 
-The lookup table is located at: `.claude/skills/cmp-summary-workflow/processed_papers.csv`
+The lookup tables are located at:
+- `.claude/skills/cmp-summary-workflow/processed_papers.csv` - Completed papers
+- `.claude/skills/cmp-summary-workflow/working_papers.csv` - Papers currently being processed (intermediate state)
 
 **Check Process:**
 1. Read `processed_papers.csv` to get all already-processed PDF filenames and their Hash IDs
-2. For each target PDF, check if its filename exists in the lookup table
-3. If found, **skip all processing steps** for this file and log it as "Already processed"
-4. Only create a queue of files that are NOT in the lookup table
+2. Read `working_papers.csv` to get all papers currently being processed
+3. For each target PDF, check if its filename exists in either lookup table
+4. If found in `processed_papers.csv`, **skip all processing steps** for this file and log it as "Already processed"
+5. If found in `working_papers.csv`, **skip all processing steps** for this file and log it as "Currently being processed (in working_papers.csv)"
+6. Only create a queue of files that are NOT in either lookup table
 
 **Example lookup table format:**
+
+`processed_papers.csv`:
 ```
 PDF 文件名，HashID
 Zhu 等 - 2025 - Magnetic geometry.pdf,99601758296340919977837740649730029451531977553314166620560899200507929180592
 Zyuzin - 2025 - Antitoroidal magnets.pdf,22684547456475760315941586172644602821616411693201862336120404181001184982630
 ```
 
-**Action:**
-- If a PDF is found in the lookup table, skip it and move to the next file
-- Only process PDFs that are NOT in the lookup table (these are unsummarized papers)
+`working_papers.csv`:
+```
+PDF 文件名，HashID
+Wang 等 - 2024 - In progress paper.pdf,12345678901234567890123456789012345678901234567890123456789012345678
+```
 
-**Create a queue of unsummarized files. Process the queue ONE BY ONE by executing Steps 0.1 to 4 for each file before moving to the next.**
+**Action:**
+- If a PDF is found in `processed_papers.csv`, skip it and move to the next file
+- If a PDF is found in `working_papers.csv`, skip it and move to the next file (already being processed)
+- Only process PDFs that are NOT in either lookup table (these are unsummarized papers)
+
+**Create a queue of unsummarized files. Process the queue ONE BY ONE by executing Steps 0.1 to 5 for each file before moving to the next.**
 
 ### Step 0.1: PDF Classification (CRITICAL - Run BEFORE summarization)
 Before processing each PDF, **first classify it** to determine if it should be summarized or moved to a special directory.
@@ -168,6 +181,16 @@ print(hash_id)
 ```
 *Capture the printed `<HashID>`.*
 
+**After computing the HashID, immediately append to `working_papers.csv`:**
+
+```python
+# Append to working_papers.csv (intermediate state tracking)
+with open('.claude/skills/cmp-summary-workflow/working_papers.csv', 'a') as f:
+    f.write(f"{pdf_filename},{hash_id}\n")
+```
+
+The `working_papers.csv` file tracks papers currently being processed. It serves as a "lock" to prevent duplicate processing if the workflow is interrupted and restarted.
+
 ### Step 3: Archive and Rename PDF (For current file)
 Ensure the `output_pdfs/` and `data_md/` directories exist.
 Use the `Bash` tool to copy the current original PDF to `output_pdfs/`, renaming it with the generated Hash integer.
@@ -216,6 +239,18 @@ For each successfully processed paper, append a new row to `processed_papers.csv
 # Append to processed_papers.csv
 with open('.claude/skills/cmp-summary-workflow/processed_papers.csv', 'a') as f:
     f.write(f"{pdf_filename},{hash_id}\n")
+```
+
+**Remove the corresponding entry from working_papers.csv:**
+After successfully updating `processed_papers.csv`, remove the entry from `working_papers.csv` to indicate the paper has been fully processed:
+```python
+# Remove from working_papers.csv (mark as completed)
+import csv
+working_papers_path = '.claude/skills/cmp-summary-workflow/working_papers.csv'
+with open(working_papers_path, 'r', encoding='utf-8') as f:
+    lines = [line for line in f if not line.strip().startswith(f"{pdf_filename},")]
+with open(working_papers_path, 'w', encoding='utf-8') as f:
+    f.writelines(lines)
 ```
 
 Present a comprehensive summary to the user detailing the batch results. For example:

@@ -81,10 +81,15 @@ metadata.txt
 # Other markdown files
 gemini.md
 
-# Claude specific
-.claude/projects/
-.claude/plans/
-*.output
+# Lookup tables (contain personal processing history)
+.claude/skills/cmp-summary-workflow/processed_papers.csv
+.claude/skills/cmp-summary-workflow/working_papers.csv
+
+# Review and assessment files
+*综述.md
+*评估.md
+*review*.md
+*assessment*.md
 
 # OS files
 Thumbs.db

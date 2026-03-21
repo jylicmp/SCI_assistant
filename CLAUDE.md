@@ -17,12 +17,18 @@ SCI_assistant is a literature summarization and synchronization tool for Condens
 SCI_assistant/
 ├── data_md/              # Generated literature summaries (HashID.md)
 ├── input_pdfs/           # Input PDF directory
+├── input_review/         # Classified review articles (not summarized)
+├── input_book/           # Classified books (not summarized)
+├── input_supp/           # Classified supplementary materials
 ├── output_pdfs/          # Archived PDFs (renamed to HashID.pdf)
 ├── .claude/
 │   ├── agents/
 │   │   └── cmp-summarizer.md   # Subagent prompt template
 │   └── skills/
 │       ├── cmp-summary-workflow/  # Main workflow skill
+│       │   ├── SKILL.md           # Skill definition & workflow
+│       │   ├── processed_papers.csv  # Lookup table: completed papers
+│       │   └── working_papers.csv    # Lookup table: in-progress papers
 │       └── cmp-peer-review/       # Peer review skill
 ├── notion_sync.py        # Notion synchronization script
 ├── notion_schema.py      # Database schema definition
@@ -35,11 +41,22 @@ SCI_assistant/
 ## Skills & Agents System
 
 ### cmp-summary-workflow (`/invoke-cmp-summary-workflow`)
-Main workflow for processing PDFs. When user requests summarization:
-1. Extract metadata from `metadata.csv` (Author, Journal, Year, Title)
-2. Compute SHA256 Hash ID: `sha256([auth1][journal][year][title])` as base-10 integer
-3. Archive PDF: `input_pdfs/x.pdf` → `output_pdfs/<HashID>.pdf`
-4. Invoke subagent: `claude -p "$(< .claude/agents/cmp_summarizer.md)" > data_md/<HashID>.md`
+Main workflow for processing PDFs with batch support and automatic classification:
+
+1. **Check Lookup Tables**: Query `processed_papers.csv` and `working_papers.csv` to skip duplicates
+2. **PDF Classification** (v1.1+): Auto-sort into categories:
+   - **Supplementary Material**: Files with `supplementary`, `SI`, `supporting` in filename → `input_supp/`
+   - **Review Articles**: Metadata indicates review OR file >5MB with >20 pages → `input_review/`
+   - **Books**: File >10MB with Publisher but no Journal → `input_book/`
+   - **Regular Papers**: Proceed to summarization
+3. **Extract Metadata**: From `metadata.csv` Column 38 (File Attachments) for 100% match rate
+4. **arXiv Detection** (v1.2+): Detect preprints from journal field or filename
+5. **Compute SHA256 Hash ID**: `sha256([auth1][journal][year][title])` as base-10 integer
+6. **Archive PDF**: `input_pdfs/x.pdf` → `output_pdfs/<HashID>.pdf`
+7. **Invoke Subagent**: Delegate summarization to `cmp-summarizer`
+8. **Update Lookup Tables**: Mark as processed in `processed_papers.csv`
+
+**Sequential Processing**: When batch processing multiple PDFs, each file is processed one-by-one (not parallel) to prevent context overflow.
 
 ### cmp_summarizer (Subagent)
 Expert CMP physicist subagent. Reads PDFs and outputs structured markdown with:
@@ -108,3 +125,30 @@ NOTION_DATABASE_ID=xxx
 2. **Block filtering**: Skips metadata blocks, keeps content from numbered sections
 3. **Update strategy**: Delete existing blocks → append new blocks (ensures clean updates)
 4. **Debounce**: File watcher uses 2-second debounce to avoid rapid triggers
+5. **Lookup Tables**: Prevent duplicate processing and enable resume after interruption
+   - `processed_papers.csv`: Tracks completed papers (PDF filename, Hash ID)
+   - `working_papers.csv`: Tracks papers currently being processed (lock mechanism)
+6. **PDF Classification**: Reduces noise by filtering out supplements, reviews, and books before summarization
+
+---
+
+## Version History
+
+### v1.2 (Current)
+- **Feature**: arXiv preprint detection
+- **Fix**: Subagent invocation using `--agent` flag
+- **Improvement**: Better metadata extraction for preprints
+
+### v1.1
+- **Feature**: PDF classification system
+  - Auto-sort supplementary materials to `input_supp/`
+  - Auto-sort review articles to `input_review/`
+  - Auto-sort books to `input_book/`
+- **Feature**: Lookup table system (`processed_papers.csv`, `working_papers.csv`)
+- **Improvement**: Batch processing with sequential execution
+
+### v1.0
+- **Feature**: Initial workflow with metadata extraction
+- **Feature**: SHA256-based Hash ID generation
+- **Feature**: Notion synchronization
+- **Feature**: File watcher for auto-sync
