@@ -226,6 +226,31 @@ Please read and summarize this paper: output_pdfs/<HashID>.pdf" > "data_md/<Hash
 ```
 *(Note: Wait for this Bash command to finish completely before starting Step 1 for the next paper in the queue.)*
 
+### Step 4.5: Validate Summary Format (CRITICAL)
+After the subagent completes, **verify the generated summary strictly follows the template format**. Read the generated file and check for compliance.
+
+**Validation Checklist:**
+1. **Metadata Section**: Must contain `## 📄 基本信息 (Metadata)` with Authors, Journal/Year, File Hash ID, Keywords
+2. **Keywords**: Must be in ENGLISH only (no Chinese characters)
+3. **Journal/Year**: Must be filled in format 'Journal Name / Year'
+4. **8 Required Sections** (must be in Chinese):
+   - `## 1. 动机与背景` (Motivation & Background)
+   - `## 2. 核心创新点` (Key Innovations)
+   - `## 3. 核心物理图像与模型` (Key Physical Picture / Model)
+   - `## 4. 方法与技术` (Methods & Techniques)
+   - `## 5. 关键结果与证据` (Key Results & Critical Evidence)
+   - `## 6. 通用性与局限性` (Generality & Limitations)
+   - `## 7. 结论与探讨` (Conclusions & Discussion)
+   - `## 8. 可拓展性与遗留问题` (Extensibility & Open Questions)
+5. **No Extra Sections**: Must NOT have any content after Section 8 (no final summary block)
+6. **Language**: All narrative text must be in Chinese (中文), only equations/keywords in English
+
+**If Validation Fails:**
+- If the format is incorrect, regenerate the summary using the main agent with explicit instructions to follow the template exactly
+- If metadata is malformed, fix it before proceeding
+
+**If Validation Passes:** Proceed to Step 5.
+
 ### Step 5: Batch Completion & Final Output and Update Lookup Table
 Once ALL papers in the queue have been successfully processed, verify the results.
 

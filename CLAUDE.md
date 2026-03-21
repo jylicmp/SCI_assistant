@@ -54,7 +54,8 @@ Main workflow for processing PDFs with batch support and automatic classificatio
 5. **Compute SHA256 Hash ID**: `sha256([auth1][journal][year][title])` as base-10 integer
 6. **Archive PDF**: `input_pdfs/x.pdf` → `output_pdfs/<HashID>.pdf`
 7. **Invoke Subagent**: Delegate summarization to `cmp-summarizer`
-8. **Update Lookup Tables**: Mark as processed in `processed_papers.csv`
+8. **Validate Format** (v1.3+): Check summary follows template (8 sections, Chinese text, no extra content)
+9. **Update Lookup Tables**: Mark as processed in `processed_papers.csv`
 
 **Sequential Processing**: When batch processing multiple PDFs, each file is processed one-by-one (not parallel) to prevent context overflow.
 
@@ -134,7 +135,14 @@ NOTION_DATABASE_ID=xxx
 
 ## Version History
 
-### v1.2 (Current)
+### v1.3 (Current)
+- **Feature**: Automatic summary format validation
+  - Check 8 required sections are present
+  - Verify Chinese language compliance
+  - Ensure no extra content after Section 8
+  - Validate metadata format for Notion sync
+
+### v1.2
 - **Feature**: arXiv preprint detection
 - **Fix**: Subagent invocation using `--agent` flag
 - **Improvement**: Better metadata extraction for preprints
