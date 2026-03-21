@@ -65,6 +65,21 @@ Expert CMP physicist subagent. Reads PDFs and outputs structured markdown with:
 - LaTeX equations in `$$...$$` format
 - Structured sections: Motivation, Core Physics, Methods, Results, Limitations
 
+### notion-sync (Subagent)
+Automated sync assistant for Notion integration:
+- Checks sync status between local summaries and Notion database
+- Uploads new summaries automatically
+- Verifies upload results and reports discrepancies
+
+**Usage:**
+```bash
+# Sync all local summaries to Notion
+claude --agent notion-sync -p "Sync all local summaries to Notion"
+
+# Sync specific file
+claude --agent notion-sync -p "Check sync status and upload HashID: <hash_id>"
+```
+
 ## Notion Sync System
 
 ### Workflow

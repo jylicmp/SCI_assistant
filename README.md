@@ -110,6 +110,23 @@ DOC_SUFFIX=pdf
 - **LaTeX 公式**：使用 `$$...$$` 格式
 - **结构化章节**：动机、核心物理、方法、结果、局限性
 
+### notion-sync 子代理
+
+自动化同步助手，管理本地总结与 Notion 数据库的同步：
+
+- **同步状态检查**：自动比较本地文件与 Notion 数据库
+- **批量上传**：上传新总结的文献到 Notion
+- **结果验证**：验证同步结果并报告差异
+
+**使用方法：**
+```bash
+# 同步所有本地总结到 Notion
+claude --agent notion-sync -p "Sync all local summaries to Notion"
+
+# 同步指定文献
+claude --agent notion-sync -p "Check sync status and upload HashID: <hash_id>"
+```
+
 ## Notion 同步系统
 
 ### 同步命令
