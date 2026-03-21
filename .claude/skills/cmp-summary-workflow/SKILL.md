@@ -7,9 +7,13 @@ allowed-tools: [Bash, Read, Write]
 # CMP Literature Summary Workflow & Native Subagent Invoker (Batch Processing Supported)
 
 ## Overview
-Do NOT summarize Condensed Matter Physics (CMP) papers directly in the main conversation context. If the user requests to summarize multiple papers or an entire directory, you MUST process them **sequentially (one by one)**. 
+Do NOT summarize Condensed Matter Physics (CMP) papers directly in the main conversation context. If the user requests to summarize multiple papers or an entire directory, you MUST process them **sequentially (one by one)**.
 
-For **EACH** paper, perform a strict preprocessing workflow (Extract Metadata -> Compute SHA256 Hash -> Rename & Archive PDF) and then delegate the summarization to the native `cmp-summarizer` Subagent.
+For **EACH** paper, perform a strict preprocessing workflow (Extract Metadata → Compute SHA256 Hash → Rename & Archive PDF) and then perform **Two-Phase Summary Generation**:
+1. **Phase 1**: Delegate information extraction to the native `cmp-extractor` Subagent
+2. **Phase 2**: Format the extracted information into the standard 8-section Chinese template using the main agent
+
+This two-phase approach achieves higher reliability by separating information extraction (complex cognitive task) from formatting (structured task).
 
 ## Execution Workflow (STRICT ORDER)
 
@@ -203,31 +207,96 @@ cp "path/to/current_paper.pdf" "output_pdfs/<HashID>.pdf"
 ```
 *(Note: Adjust the source path if the file was moved during classification)*
 
-### Step 4: Execute Native Subagent (For current file)
-Pass the extracted metadata (Journal, Year, Authors, Title) to the subagent and instruct it to use **ENGLISH keywords only**.
+### Step 4: Two-Phase Summary Generation (NEW)
 
-Use the `Bash` tool to natively invoke the `cmp-summarizer` subagent via the Claude CLI with the `--agent` flag and `--bare` flag (to avoid inheriting context):
+The summary generation is split into two phases to improve reliability and format compliance.
+
+#### Phase 1: Extract Structured Information (Subagent)
+
+Use the `Bash` tool to invoke the `cmp-extractor` subagent to read the PDF and extract all key information in structured English format:
+
 ```bash
-claude --bare --agent cmp-summarizer -p "The unique Hash ID for this paper is: <HashID>.
+claude --bare --agent cmp-extractor -p "Please read and extract structured information from this paper:
 
-Metadata for this paper:
-- Authors: <extracted_authors>
-- Journal/Year: <journal> / <year>
-- Title: <title>
+output_pdfs/<HashID>.pdf
 
-IMPORTANT REQUIREMENTS:
-1. **Journal/Year field MUST be filled** in the format 'Journal Name / Year' (e.g., 'Physical Review B / 2023').
-   - If the paper is published, use the actual journal name
-   - If the paper is a preprint (arXiv identifier present or arXiv branding in PDF), use 'arXiv / <year>'
-   - Only use 'Unknown / <year>' as a last resort when journal cannot be determined
-2. **Keywords MUST be in ENGLISH only** (no Chinese characters). Use standard physics terms like 'Berry Curvature', 'Quantum Anomalous Hall Effect', etc.
+The Hash ID for this paper is: <HashID>
 
-Please read and summarize this paper: output_pdfs/<HashID>.pdf" > "data_md/<HashID>.md"
+Extract all sections (METADATA, RESEARCH_QUESTION, KEY_INNOVATIONS, CORE_PHYSICS, METHODS, RESULTS, LIMITATIONS, CONCLUSIONS) in detail." 2>&1
 ```
-*(Note: Wait for this Bash command to finish completely before starting Step 1 for the next paper in the queue.)*
+
+**Why this approach?**
+- The `cmp-extractor` subagent has a simpler task: just extract information, no formatting constraints
+- High success rate for information extraction
+- Captures Hamiltonians, equations, parameters, and physical mechanisms accurately
+
+#### Phase 2: Format to Standard Template (Main Agent)
+
+After receiving the extracted information from Phase 1, use the `Write` tool to create the final summary following the strict 8-section Chinese template format.
+
+**Template Structure:**
+```markdown
+# [Paper Title] - Literature Summary
+
+## 📄 基本信息
+- **Authors**: [from extracted metadata]
+- **Journal/Year**: [from extracted metadata]
+- **File Hash ID**: [HashID]
+- **Keywords**: [3-5 English keywords from extraction]
+
+## 🎯 一句话摘要
+> [1-2 sentence summary in Chinese]
+
+## 1. 动机与背景
+- **研究空白**: [from RESEARCH_QUESTION]
+- **研究目的**: [from RESEARCH_QUESTION]
+
+## 2. 核心创新点
+- [from KEY_INNOVATIONS]
+
+## 3. 核心物理图像与模型
+- **物理机制**: [from CORE_PHYSICS]
+- **核心方程**: [LaTeX equations from CORE_PHYSICS]
+- **物理假设**: [from CORE_PHYSICS]
+
+## 4. 方法与技术
+- **实验细节**: [from METHODS]
+- **理论/计算细节**: [from METHODS]
+
+## 5. 关键结果与证据
+- **决定性证据**: [from RESULTS]
+- **主要发现**: [from RESULTS]
+
+## 6. 通用性与局限性
+- **通用性**: [from LIMITATIONS]
+- **局限性**: [from LIMITATIONS]
+
+## 7. 结论与探讨
+- [from CONCLUSIONS]
+
+## 8. 可拓展性与遗留问题
+- **未来方向**: [from CONCLUSIONS - Future directions]
+  - [List 3-4 items]
+- **未解之谜**: [from CONCLUSIONS - Open questions]
+  - [List 3-4 items]
+```
+
+**Formatting Rules:**
+1. ALL narrative text must be in **Chinese (中文)**
+2. Only these elements can be in English:
+   - LaTeX equations and mathematical symbols
+   - Physical quantities (temperatures, fields, etc.)
+   - Material names, software names, institution names
+   - Keywords (in the metadata section)
+3. Section headers must be pure Chinese (NO English in parentheses)
+4. File must start immediately with `# [Title]` (no intro text)
+5. File must end after Section 8 "未解之谜" (no final summary)
+6. Do NOT use `---` separator lines anywhere
+
+Save the formatted summary to: `data_md/<HashID>.md`
 
 ### Step 4.5: Validate Summary Format (CRITICAL)
-After the subagent completes, **verify the generated summary strictly follows the template format**. Read the generated file and check for compliance.
+After Phase 2 formatting is complete, **verify the generated summary strictly follows the template format**. Read the generated file and check for compliance.
 
 **Validation Checklist:**
 1. **Title**: Must be `# [Paper Title] - Literature Summary`
@@ -246,33 +315,20 @@ After the subagent completes, **verify the generated summary strictly follows th
    - `## 8. 可拓展性与遗留问题`
 6. **No Extra Sections**: Must NOT have any content after Section 8 (no final summary block)
 7. **Language**: All narrative text must be in Chinese (中文), only equations/keywords in English
+8. **Equations**: LaTeX equations should be properly formatted with `$...$` or `$$...$$`
 
 **If Validation Fails:**
 
-Common issues and solutions:
+Since Phase 2 is performed by the main agent (you), formatting errors should be rare. If they occur:
 
-1. **Extra Intro Text**: Subagent may add text like "我已完成阅读..." before the title
-   - **Fix**: Remove all content before `# [Paper Title]`
+1. **Missing Content**: If the cmp-extractor output was incomplete, you may need to regenerate the summary with additional prompts
+2. **Format Issues**: Use the `Edit` tool to fix specific formatting problems
+3. **Language Issues**: Ensure all narrative text is translated to Chinese
 
-2. **Extra Separator Lines**: Subagent may add `---` separators not in template
-   - **Fix**: Remove all `---` lines
-
-3. **Missing Section 8 Content**: Section 8 may be empty or incomplete
-   - **Fix**: Ensure Section 8 has both "未来方向" and "未解之谜" subsections
-
-4. **Extra Summary Block**: Subagent may add a final "Summary" or "总结" section after Section 8
-   - **Fix**: Remove everything after Section 8 (file must end with "未解之谜" content)
-
-5. **Wrong Language**: Content in English instead of Chinese
-   - **Fix**: Regenerate with explicit "中文" requirement
-
-6. **Malformed Equations**: LaTeX equations may be malformed
-   - **Fix**: Check equation syntax and fix manually if needed
-
-**Regeneration Procedure:**
-- If format is severely incorrect, regenerate using main agent with explicit template instructions
-- If minor issues, fix using Edit tool to correct specific lines
-- Always verify after fixing
+**Regeneration Procedure (if extraction was poor):**
+- Re-run Phase 1 with the cmp-extractor subagent
+- Ensure the extraction captures all required sections
+- Re-run Phase 2 formatting
 
 **If Validation Passes:** Proceed to Step 5.
 
@@ -319,6 +375,41 @@ Present a comprehensive summary to the user detailing the batch results. For exa
 6. `PreviousPaper2024.pdf` -> Found in processed_papers.csv, skipped"
 
 **CRITICAL RULE: DO NOT print the actual markdown summaries in the main chat window. Only report the file paths, Hash IDs, and classification results.**
+
+---
+
+## Subagent Reference
+
+### `cmp-extractor` (Primary - Phase 1)
+**Purpose**: Extract structured information from PDF without formatting constraints
+**File**: `.claude/agents/cmp-extractor.md`
+
+This subagent reads the PDF and extracts:
+- METADATA (Title, Authors, Journal, Year)
+- RESEARCH_QUESTION
+- KEY_INNOVATIONS
+- CORE_PHYSICS (mechanisms, equations, Hamiltonian)
+- METHODS (experimental/computational details)
+- RESULTS (key findings, evidence)
+- LIMITATIONS
+- CONCLUSIONS (future directions, open questions)
+
+**Advantages**:
+- High success rate for information extraction
+- No formatting constraints (simpler task)
+- Captures detailed technical content
+
+### `cmp-summarizer` (Legacy - Optional)
+**Purpose**: Directly generate formatted summary (original approach)
+**File**: `.claude/agents/cmp-summarizer.md`
+
+
+**Use only if**:
+- The two-phase approach fails for a specific paper
+- User explicitly requests single-phase summarization
+- cmp-extractor is unavailable
+
+**Note**: This subagent often struggles with strict format compliance and language switching.
 
 ---
 

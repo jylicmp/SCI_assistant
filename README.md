@@ -26,11 +26,15 @@
 SCI_assistant/
 ├── data_md/              # 生成的文献摘要 (HashID.md)
 ├── input_pdfs/           # 输入 PDF 目录
+├── input_review/         # 分类的综述文章（不总结）
+├── input_book/           # 分类的书籍（不总结）
+├── input_supp/           # 分类的补充材料（不总结）
 ├── output_pdfs/          # 归档 PDF (重命名为 HashID.pdf)
 ├── .claude/
 │   ├── agents/
-│   │   ├── cmp-summarizer.md   # 子代理提示模板
-│   │   └── notion-sync.md      # Notion 同步子代理
+│   │   ├── cmp-extractor.md      # NEW: 信息提取子代理（Phase 1）
+│   │   ├── cmp-summarizer.md     # 子代理提示模板（Legacy）
+│   │   └── notion-sync.md        # Notion 同步子代理
 │   └── skills/
 │       ├── cmp-summary-workflow/  # 主工作流技能
 │       └── cmp-peer-review/       # 同行评审技能
@@ -96,20 +100,30 @@ DOC_SUFFIX=pdf
 
 ### cmp-summary-workflow
 
-主工作流用于处理 PDF 论文：
+主工作流用于处理 PDF 论文（v1.4+ 两阶段流程）：
 
 1. 从 `metadata.csv` 提取元数据（作者、期刊、年份、标题）
 2. 计算 SHA256 Hash ID：`sha256([auth1][journal][year][title])` 转为 10 进制整数
 3. 归档 PDF：`input_pdfs/x.pdf` → `output_pdfs/<HashID>.pdf`
-4. 调用子代理生成摘要：输出到 `data_md/<HashID>.md`
+4. **两阶段总结生成**（v1.4+）：
+   - **Phase 1**: 调用 `cmp-extractor` 子代理提取结构化信息
+   - **Phase 2**: 主代理将提取内容格式化为8章节中文模板
+5. 验证格式：检查8章节结构、中文语言、元数据完整性
+6. 更新查找表：标记为已处理
 
-### cmp_summarizer 子代理
+### cmp_extractor 子代理（v1.4+）
 
-专业凝聚态物理子代理，读取 PDF 并输出结构化 Markdown：
+信息提取子代理，用于 Phase 1：
+- 读取 PDF 并提取结构化信息（无格式约束）
+- 提取：METADATA、RESEARCH_QUESTION、KEY_INNOVATIONS、CORE_PHYSICS、METHODS、RESULTS、LIMITATIONS、CONCLUSIONS
+- 输出详细技术内容（英文），供主代理格式化
+- 高成功率，任务更简单
 
-- **元数据部分**：Hash ID、作者、期刊/年份、关键词
-- **LaTeX 公式**：使用 `$$...$$` 格式
-- **结构化章节**：动机、核心物理、方法、结果、局限性
+### cmp_summarizer 子代理（Legacy）
+
+专业凝聚态物理子代理（原始方法）：
+- 尝试直接生成格式化摘要
+- **注意**：格式合规性较差，建议使用 `cmp-extractor` + 主代理格式化
 
 ### notion-sync 子代理
 
@@ -221,6 +235,29 @@ MIT - 详见 [LICENSE](LICENSE) 文件
 - [Claude Code 文档](https://claude.ai/code)
 
 ## 版本历史
+
+### v1.4 (2026-03-21) - 两阶段总结流程
+
+**新增功能：**
+- 🆕 **两阶段总结生成** (`cmp-extractor` + Main Agent)
+  - **Phase 1**: `cmp-extractor` 子代理提取结构化信息（高成功率，无格式约束）
+  - **Phase 2**: 主代理将提取内容格式化为8章节中文模板
+  - 分离信息提取（认知任务）和格式化（结构任务），提高整体可靠性
+- 🆕 **新增子代理**: `cmp-extractor`
+  - 专门用于PDF信息提取，无需担心格式约束
+  - 提取：METADATA、RESEARCH_QUESTION、KEY_INNOVATIONS、CORE_PHYSICS、METHODS、RESULTS、LIMITATIONS、CONCLUSIONS
+  - 输出详细技术内容（英文），供主代理格式化
+
+**改进：**
+- ✅ **更高成功率**: 子代理任务更简单（仅提取），格式由主代理统一控制
+- ✅ **更好语言控制**: 英文提取 → 中文格式化，避免语言混用
+- ✅ **格式一致性**: 主代理按标准模板格式化，确保8章节结构
+- ✅ **人工干预**: 主代理可在格式化前审核提取内容，处理复杂论文
+
+**技术变更：**
+- 新增 `.claude/agents/cmp-extractor.md` 子代理定义
+- 更新 `.claude/skills/cmp-summary-workflow/SKILL.md` Step 4：改为两阶段流程
+- 更新 `CLAUDE.md` 目录结构和版本历史
 
 ### v1.3.2 (2026-03-21) - Notion 同步子代理
 

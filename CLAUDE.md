@@ -23,8 +23,9 @@ SCI_assistant/
 ├── output_pdfs/          # Archived PDFs (renamed to HashID.pdf)
 ├── .claude/
 │   ├── agents/
-│   │   ├── cmp-summarizer.md   # Subagent prompt template
-│   │   └── notion-sync.md      # Notion sync subagent
+│   │   ├── cmp-extractor.md      # NEW: Information extraction subagent (Phase 1)
+│   │   ├── cmp-summarizer.md     # Subagent prompt template (Legacy)
+│   │   └── notion-sync.md        # Notion sync subagent
 │   └── skills/
 │       ├── cmp-summary-workflow/  # Main workflow skill
 │       │   ├── SKILL.md           # Skill definition & workflow
@@ -54,17 +55,26 @@ Main workflow for processing PDFs with batch support and automatic classificatio
 4. **arXiv Detection** (v1.2+): Detect preprints from journal field or filename
 5. **Compute SHA256 Hash ID**: `sha256([auth1][journal][year][title])` as base-10 integer
 6. **Archive PDF**: `input_pdfs/x.pdf` → `output_pdfs/<HashID>.pdf`
-7. **Invoke Subagent**: Delegate summarization to `cmp-summarizer`
+7. **Two-Phase Summary** (v1.4+):
+   - **Phase 1**: Invoke `cmp-extractor` subagent to extract structured information
+   - **Phase 2**: Main agent formats extracted content into 8-section Chinese template
 8. **Validate Format** (v1.3+): Check summary follows template (8 sections, Chinese text, no extra content)
 9. **Update Lookup Tables**: Mark as processed in `processed_papers.csv`
 
 **Sequential Processing**: When batch processing multiple PDFs, each file is processed one-by-one (not parallel) to prevent context overflow.
 
-### cmp_summarizer (Subagent)
-Expert CMP physicist subagent. Reads PDFs and outputs structured markdown with:
-- Metadata section with Hash ID, Authors, Journal/Year, Keywords
-- LaTeX equations in `$$...$$` format
-- Structured sections: Motivation, Core Physics, Methods, Results, Limitations
+### cmp_extractor (Subagent) - NEW in v1.4
+Information extraction subagent for Phase 1 of the summary workflow:
+- Extracts structured information from PDFs without formatting constraints
+- Captures: METADATA, RESEARCH_QUESTION, KEY_INNOVATIONS, CORE_PHYSICS, METHODS, RESULTS, LIMITATIONS, CONCLUSIONS
+- High success rate for information extraction
+- Outputs detailed technical content in English
+- Used as input for Phase 2 formatting by main agent
+
+### cmp_summarizer (Subagent) - Legacy
+Expert CMP physicist subagent (original approach):
+- Attempts to directly generate formatted summary with strict template compliance
+- **Note**: Often struggles with format compliance and language switching; use `cmp-extractor` + main agent formatting instead
 
 ### notion-sync (Subagent)
 Automated sync assistant for Notion integration:
@@ -151,7 +161,18 @@ NOTION_DATABASE_ID=xxx
 
 ## Version History
 
-### v1.3.2 (Current)
+### v1.4 (Current)
+- **Feature**: Two-phase summary generation workflow
+  - Phase 1: `cmp-extractor` subagent extracts structured information from PDF
+  - Phase 2: Main agent formats extracted content into 8-section Chinese template
+  - Higher reliability by separating extraction (cognitive) from formatting (structural)
+  - Better language control: English extraction → Chinese formatting
+- **New Subagent**: `cmp-extractor` for Phase 1 information extraction
+  - Extracts: METADATA, RESEARCH_QUESTION, KEY_INNOVATIONS, CORE_PHYSICS, METHODS, RESULTS, LIMITATIONS, CONCLUSIONS
+  - No formatting constraints (simpler task, higher success rate)
+  - Captures detailed technical content including equations and Hamiltonians
+
+### v1.3.2
 - **Feature**: Notion sync subagent (`notion-sync`)
   - Automated sync status checking between local and Notion
   - Upload new summaries to Notion database
