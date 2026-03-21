@@ -156,9 +156,14 @@ NOTION_DATABASE_ID=xxx
   - Automated sync status checking between local and Notion
   - Upload new summaries to Notion database
   - Verify upload results and report discrepancies
+- **Improvement**: Subagent invocation with `--bare` flag
+  - Prevents context inheritance from parent session
+  - Ensures clean execution environment for each paper
+  - Avoids context accumulation when processing multiple papers
 - **Fix**: Enhanced subagent template with explicit format rules
   - Added "CRITICAL OUTPUT RULES" section
   - Explicitly forbid intro text, separator lines, extra sections
+  - Enforce pure Chinese H2 headers (no English in parentheses)
   - Provide correct/incorrect ending examples
 
 ### v1.3
