@@ -206,9 +206,9 @@ cp "path/to/current_paper.pdf" "output_pdfs/<HashID>.pdf"
 ### Step 4: Execute Native Subagent (For current file)
 Pass the extracted metadata (Journal, Year, Authors, Title) to the subagent and instruct it to use **ENGLISH keywords only**.
 
-Use the `Bash` tool to natively invoke the `cmp-summarizer` subagent via the Claude CLI with the `--agent` flag:
+Use the `Bash` tool to natively invoke the `cmp-summarizer` subagent via the Claude CLI with the `--agent` flag and `--bare` flag (to avoid inheriting context):
 ```bash
-claude --agent cmp-summarizer -p "The unique Hash ID for this paper is: <HashID>.
+claude --bare --agent cmp-summarizer -p "The unique Hash ID for this paper is: <HashID>.
 
 Metadata for this paper:
 - Authors: <extracted_authors>

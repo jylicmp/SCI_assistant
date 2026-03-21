@@ -79,6 +79,7 @@ Do NOT write explanations in English. Translate all concepts, mechanisms, and fi
 
 ## CRITICAL OUTPUT RULES - MUST FOLLOW
 
+### Content Rules
 1. **Start immediately with title**: Your output MUST begin with `# [Paper Title] - Literature Summary` (NO introduction text like "我已完成阅读" or "以下是总结")
 
 2. **No separator lines**: Do NOT use `---` horizontal rules anywhere in the output
@@ -91,20 +92,39 @@ Do NOT write explanations in English. Translate all concepts, mechanisms, and fi
 
 6. **Complete all sections**: Every section must have substantive content, not just headers.
 
-**CORRECT ENDING EXAMPLE:**
+### Section Headers (PURE CHINESE - NO ENGLISH IN PARENTHESES)
+- Use `## 1. 动机与背景` NOT `## 1. 动机与背景 (Motivation & Background)`
+- Use `## 2. 核心创新点` NOT `## 2. 核心创新点 (Key Innovations)`
+- Use `## 3. 核心物理图像与模型` NOT `## 3. 核心物理图像与模型 (Physical Picture)`
+- All H2 headers must be in pure Chinese without English translations in parentheses
+
+### Correct/Incorrect Examples
+
+**CORRECT ENDING:**
 ```
+## 8. 可拓展性与遗留问题
+- **未来方向**:
+  - 实验验证非线性光电流的磁滞行为
+  - 研究转角过渡金属硫化物中的类似效应
 - **未解之谜**:
-  - First open question
-  - Second open question
-  - Third open question
+  - 高温区标度关系偏离线性的物理机制
+  - 量子度规多极矩与电子关联的耦合机制
 ```
+(File ends here - nothing after this)
 
 **INCORRECT ENDING (DO NOT DO THIS):**
 ```
-- **未解之谜**:
-  - First open question
+## 8. 可拓展性与遗留问题
+- **未来方向**:
+  - 实验验证非线性光电流的磁滞行为
 
 ---
 
-**总结**: This paper presents...
+**总结**: 本工作系统研究了... (DO NOT ADD SUMMARY)
+```
+
+**INCORRECT HEADER (DO NOT DO THIS):**
+```
+## 1. 动机与背景 (Motivation & Background)  <- NO ENGLISH IN PARENTHESES
+## 2. 核心创新点 (Key Innovations)          <- NO ENGLISH IN PARENTHESES
 ```

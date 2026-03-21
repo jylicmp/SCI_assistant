@@ -72,7 +72,7 @@
 
 ### 调用参数
 ```bash
-claude --agent cmp-summarizer -p "The unique Hash ID for this paper is: <HashID>.
+claude --bare --agent cmp-summarizer -p "The unique Hash ID for this paper is: <HashID>.
 
 Metadata for this paper:
 - Authors: <authors>
@@ -87,6 +87,8 @@ IMPORTANT REQUIREMENTS:
 
 Please read and summarize this paper: output_pdfs/<HashID>.pdf" > "data_md/<HashID>.md"
 ```
+
+**注意**: 使用 `--bare` 标志避免继承父级上下文，确保子代理获得干净的执行环境。
 
 ### 调用后验证（必须执行）
 生成后必须执行 Step 4.5 验证：
